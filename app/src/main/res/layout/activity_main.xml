@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/list_all_img"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_margin="12dp"
+        android:background="@color/gold_gray"
+        android:gravity="center"
+        android:text="遍历图片"
+        android:textColor="@color/cardview_dark_background"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/img_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"/>
+
+</LinearLayout>
