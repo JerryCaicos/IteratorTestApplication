@@ -106,6 +106,20 @@ public class DBHelper<T>
         return list;
     }
 
+    public synchronized List<T> queryBeanOrderBy(Class<T> clazz,boolean ascending)
+    {
+        List<T> list = new ArrayList<>();
+        try
+        {
+            list.addAll(mDataBaseHelper.getBeanDao(clazz).queryBuilder().orderBy(TableConstants.KEY_IMG_TIME,false).query());
+        }
+        catch(SQLException e)
+        {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public synchronized boolean batchInsertBean(final Class<T> clazz, final List<T> list, final int batchType)
     {
         return mDataBaseHelper.batchInsertBeans(clazz,list,batchType);

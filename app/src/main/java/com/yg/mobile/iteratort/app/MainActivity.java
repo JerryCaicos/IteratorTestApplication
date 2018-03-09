@@ -6,26 +6,26 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.yg.mobile.iteratort.app.adapter.RecyclerViewAdapter;
 import com.yg.mobile.iteratort.app.model.ImageSqlModel;
 import com.yg.mobile.iteratort.app.model.TableConstants;
 import com.yg.mobile.iteratort.app.service.DBHelper;
+import com.yg.mobile.iteratort.app.utils.ImageLoaderFromSdcard;
 import com.yg.mobile.iteratort.app.utils.LogUtils;
-
-import org.w3c.dom.Node;
+import com.yg.mobile.iteratort.app.view.MyDividerItemDecoration;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -41,12 +41,21 @@ public class MainActivity extends AppCompatActivity
 
     private List<ImageSqlModel> sqlList;
 
+    private ImageLoaderFromSdcard imageLoader;
+
+    private RecyclerViewAdapter adapter;
+
     private Handler handler = new MyHandler(this)
     {
         @Override
         public void handlemsg(Message msg)
         {
-
+            switch(msg.what)
+            {
+                case MSG_SHOW_IMG:
+                    showImgList();
+                    break;
+            }
         }
     };
 
@@ -54,12 +63,17 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        imageLoader = new ImageLoaderFromSdcard(this);
         dbHelper = DBHelper.getInstance(getApplicationContext());
         setContentView(R.layout.activity_main);
 
         listAllImg = (TextView) findViewById(R.id.list_all_img);
         recyclerView = (RecyclerView) findViewById(R.id.img_recycler_view);
-
+        recyclerView.setLayoutManager(
+                new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
+        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
+        recyclerView.addItemDecoration(
+                new MyDividerItemDecoration(this,LinearLayoutManager.VERTICAL));
         listAllImg.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -71,14 +85,34 @@ public class MainActivity extends AppCompatActivity
         queryImgInSql();
     }
 
-    private void queryImgInSql()
+    private void showImgList()
     {
-        sqlList = dbHelper.queryBeans(ImageSqlModel.class);
         if(sqlList != null && sqlList.size() > 0)
         {
-            LogUtils.d("sql list size : " + sqlList.size());
-
+            if(adapter == null)
+            {
+                adapter = new RecyclerViewAdapter(this,sqlList,imageLoader);
+            }
+            recyclerView.setAdapter(adapter);
         }
+    }
+
+    private void queryImgInSql()
+    {
+        Thread thread = new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                sqlList = dbHelper.queryBeanOrderBy(ImageSqlModel.class,false);
+                if(sqlList != null && sqlList.size() > 0)
+                {
+                    LogUtils.d("sql list size : " + sqlList.size());
+                    handler.sendEmptyMessage(MSG_SHOW_IMG);
+                }
+            }
+        });
+        thread.start();
     }
 
     private void getAllImgFromSD()
@@ -156,13 +190,8 @@ public class MainActivity extends AppCompatActivity
         boolean result = dbHelper.batchInsertBean(ImageSqlModel.class,imgPaths, TableConstants.KEY_INSERT);
         if(result)
         {
-            List<ImageSqlModel> list = dbHelper.queryBeans(ImageSqlModel.class);
-            if(list != null)
-            {
-                LogUtils.d("sql list size : " + list.size());
-            }
+            queryImgInSql();
         }
-        handler.sendEmptyMessage(MSG_SHOW_IMG);
     }
 
     private void addImgFile(File file)

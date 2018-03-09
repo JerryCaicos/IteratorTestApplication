@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
-              android:layout_height="match_parent"
+              android:layout_height="100dp"
               android:orientation="vertical">
 
     <LinearLayout
@@ -13,6 +13,7 @@
             android:id="@+id/view_img"
             android:layout_width="100dp"
             android:layout_height="100dp"
+            android:src="@color/gold_gray"
             android:scaleType="fitXY"/>
         <TextView
             android:id="@+id/view_img_time"
